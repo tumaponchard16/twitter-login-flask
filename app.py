@@ -41,4 +41,4 @@ def twitter_auth():
     return user.screen_name
 
 
-app.run(port=4995)
+app.run(port=4995, debug=True)
