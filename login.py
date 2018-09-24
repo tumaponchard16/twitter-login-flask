@@ -5,51 +5,56 @@ import json
 from user import User
 from database import Database
 
+# Create a consumer, which uses CONSUMER_KEY, CONSUMER_SECRET to identify our app uniquely
+consumer = oauth2.Consumer(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+
 # Initialise database
 Database.initialise(user='postgres', password='16redroses', host='localhost', database='learning')
 
-# Create a consumer, which uses CONSUMER_KEY, CONSUMER_SECRET to identify our app uniquely
-consumer = oauth2.Consumer(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
-client = oauth2.Client(consumer)
+user_email = input("Enter your email address: ")
+user = User.load_from_db_by_email(user_email)
 
-# Use the client to perform request for the request token
-response, content = client.request(constants.REQUEST_TOKEN_URL, 'POST')
+# If user does not exists in the database
+if not user:
+    client = oauth2.Client(consumer)
 
-if response.status != 200:
-    print("An error occurred getting the request token from twitter!")
+    # Use the client to perform request for the request token
+    response, content = client.request(constants.REQUEST_TOKEN_URL, 'POST')
 
-# Get the request token parsing the query string returned
-request_token = dict(urlparse.parse_qsl(content.decode('utf-8')))
+    if response.status != 200:
+        print("An error occurred getting the request token from twitter!")
 
-# Ask the user to authorize the app and gives us the pin code
-print("Go to the following website in your browser: ")
-print("{}?oauth_token={}".format(constants.AUTHORIZATION_URL, request_token['oauth_token']))
+    # Get the request token parsing the query string returned
+    request_token = dict(urlparse.parse_qsl(content.decode('utf-8')))
 
-oauth_verifier = input("What is the PIN? ")
+    # Ask the user to authorize the app and gives us the pin code
+    print("Go to the following website in your browser: ")
+    print("{}?oauth_token={}".format(constants.AUTHORIZATION_URL, request_token['oauth_token']))
 
-# Create token object which contains the request token and the token verifier
-token = oauth2.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
-token.set_verifier(oauth_verifier)
+    oauth_verifier = input("What is the PIN? ")
 
-# Create a client with our consumer (our app) and the newly created (and verified) token
-client = oauth2.Client(consumer, token)
+    # Create token object which contains the request token and the token verifier
+    token = oauth2.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
+    token.set_verifier(oauth_verifier)
 
-# Ask twitter for an access token
-response, content = client.request(constants.ACCESS_TOKEN_URL, 'POST')
-access_token = dict(urlparse.parse_qsl(content.decode('utf-8')))
+    # Create a client with our consumer (our app) and the newly created (and verified) token
+    client = oauth2.Client(consumer, token)
 
-print(access_token)
+    # Ask twitter for an access token
+    response, content = client.request(constants.ACCESS_TOKEN_URL, 'POST')
+    access_token = dict(urlparse.parse_qsl(content.decode('utf-8')))
 
-email = input("Enter your email? ")
-first_name = input("Enter your first name? ")
-last_name = input("Enter your last name? ")
+    print(access_token)
 
-# creating User object to save into the database
-user = User(email, first_name, last_name, access_token['oauth_token'], access_token['oauth_token_secret'], None)
-user.save_to_db()
+    first_name = input("Enter your first name? ")
+    last_name = input("Enter your last name? ")
+
+    # creating User object to save into the database
+    user = User(user_email, first_name, last_name, access_token['oauth_token'], access_token['oauth_token_secret'], None)
+    user.save_to_db()
 
 # Create an 'authorized_token' Token object and use that to perform Twitter api calls
-authorized_token = oauth2.Token(access_token['oauth_token'], access_token['oauth_token_secret'])
+authorized_token = oauth2.Token(user.oauth_token, user.oauth_token_secret)
 authorized_client = oauth2.Client(consumer, authorized_token)
 
 # Make twitter API calls!
