@@ -56,9 +56,20 @@ def twitter_auth():
     return redirect(url_for('profile'))
 
 
+# Get current user profile
 @app.route('/profile')
 def profile():
     return render_template('profile.html', user=g.user)
+
+
+# Searching tweets
+@app.route('/search')
+def search():
+    tweets = g.user.twitter_request('https://api.twitter.com/1.1/search/tweets.json?q=computers+filter:images')
+
+    tweet_texts = [tweet['text'] for tweet in tweets['statuses']]
+
+    return render_template('search.html', content=tweet_texts)
 
 
 app.run(port=4995, debug=True)
