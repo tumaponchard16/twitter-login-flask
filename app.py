@@ -65,7 +65,10 @@ def profile():
 # Searching tweets
 @app.route('/search')
 def search():
-    tweets = g.user.twitter_request('https://api.twitter.com/1.1/search/tweets.json?q=computers+filter:images')
+    # Query search
+    query = request.args.get('q')
+
+    tweets = g.user.twitter_request('https://api.twitter.com/1.1/search/tweets.json?q={}'.format(query))
 
     tweet_texts = [tweet['text'] for tweet in tweets['statuses']]
 
