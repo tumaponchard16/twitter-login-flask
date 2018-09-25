@@ -10,6 +10,7 @@ app.secret_key = "1234"
 Database.initialise(user='postgres', password='16redroses', host='localhost', database='learning')
 
 
+# Set global variable to be use anywhere in the application
 @app.before_request
 def load_user():
     if 'screen_name' in session:
