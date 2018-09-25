@@ -6,5 +6,10 @@
 </head>
 <body>
 {{ user.screen_name }}
+<form action="{{ url_for('search') }}">
+    <label for="q">Twitter search</label>
+    <input type="text" name="q" id="q" placeholder="Your twitter search">
+    <button type="submit">Search</button>
+</form>
 </body>
 </html>
